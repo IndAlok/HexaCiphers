@@ -1,8 +1,7 @@
--- Enhanced database schema for sentiment analysis
+-- Fixed database schema for sentiment analysis
 
-CREATE DATABASE IF NOT EXISTS sentiment_db;
-
-\c sentiment_db;
+-- Create database (remove IF NOT EXISTS as it's not needed in init script)
+-- CREATE DATABASE sentiment_db; -- Remove this line, database is created by container
 
 -- Keywords table for monitoring
 CREATE TABLE IF NOT EXISTS keywords (
@@ -28,7 +27,7 @@ CREATE TABLE IF NOT EXISTS tweets (
     retweet_count INTEGER DEFAULT 0,
     reply_count INTEGER DEFAULT 0,
     quote_count INTEGER DEFAULT 0,
-    matched_keywords JSONB,
+    matched_keywords TEXT,
     processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -39,11 +38,10 @@ CREATE TABLE IF NOT EXISTS alerts (
     tweet_id VARCHAR(50) NOT NULL,
     threat_level VARCHAR(20) NOT NULL,
     sentiment_score FLOAT NOT NULL,
-    matched_keywords JSONB,
+    matched_keywords TEXT,
     status VARCHAR(20) DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    resolved_at TIMESTAMP NULL,
-    FOREIGN KEY (tweet_id) REFERENCES tweets(tweet_id)
+    resolved_at TIMESTAMP NULL
 );
 
 -- Users table for tracking influential accounts
@@ -57,16 +55,6 @@ CREATE TABLE IF NOT EXISTS users (
     last_analyzed TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Network analysis table for tracking connections
-CREATE TABLE IF NOT EXISTS user_networks (
-    id SERIAL PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
-    connected_user_id VARCHAR(50) NOT NULL,
-    connection_type VARCHAR(50) NOT NULL, -- follower, following, mention, retweet
-    strength INTEGER DEFAULT 1,
-    last_interaction TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Insert initial keyword database
 INSERT INTO keywords (keyword, category, weight, active) VALUES
 ('anti india', 'political', 10, true),
@@ -78,17 +66,7 @@ INSERT INTO keywords (keyword, category, weight, active) VALUES
 ('india fascist', 'political', 9, true),
 ('modi dictator', 'political', 7, true),
 ('india oppression', 'political', 8, true),
-('bollywood propaganda', 'cultural', 6, true),
-('indian media lies', 'propaganda', 7, true),
-('kashmir occupation', 'political', 9, true),
-('india human rights', 'political', 7, true),
-('rss terrorist', 'political', 8, true),
-('india genocide', 'hate', 10, true),
-('bhakt troll', 'social', 5, true),
-('india fake encounter', 'security', 8, true),
-('indian scammer', 'stereotype', 6, true),
-('curry smell', 'racist', 7, true),
-('designated streets', 'racist', 8, true)
+('bollywood propaganda', 'cultural', 6, true)
 ON CONFLICT (keyword) DO NOTHING;
 
 -- Create indexes for better performance
@@ -96,5 +74,3 @@ CREATE INDEX IF NOT EXISTS idx_tweets_created_at ON tweets(created_at);
 CREATE INDEX IF NOT EXISTS idx_tweets_threat_level ON tweets(threat_level);
 CREATE INDEX IF NOT EXISTS idx_tweets_author_id ON tweets(author_id);
 CREATE INDEX IF NOT EXISTS idx_alerts_status ON alerts(status);
-CREATE INDEX IF NOT EXISTS idx_alerts_created_at ON alerts(created_at);
-CREATE INDEX IF NOT EXISTS idx_keywords_active ON keywords(active);
