@@ -27,7 +27,7 @@ class handler(BaseHTTPRequestHandler):
                 self._send_json(200, {'status': 'success', 'data': cached, 'cached': True})
                 return
             
-            tweets = search_tweets(f'#{hashtag}', max_results=100)
+            tweets = search_tweets(f'#{hashtag}', max_results=10)
             
             if not tweets:
                 self._send_error(404, f'No tweets found for #{hashtag}')

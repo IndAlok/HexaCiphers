@@ -30,7 +30,7 @@ class handler(BaseHTTPRequestHandler):
                 return
             
             user = get_user(username)
-            tweets = get_user_tweets(user['twitter_id'], max_results=100)
+            tweets = get_user_tweets(user['twitter_id'], max_results=10)
             
             analysis = analyze_user_profile(user, tweets)
             

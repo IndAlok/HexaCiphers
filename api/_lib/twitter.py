@@ -140,9 +140,9 @@ def get_user(username):
         'default_profile_image': 'default_profile' in (user.get('profile_image_url') or '')
     }
 
-def get_user_tweets(user_id, max_results=100):
+def get_user_tweets(user_id, max_results=10):
     fields = 'created_at,public_metrics,entities,conversation_id,in_reply_to_user_id,referenced_tweets'
-    url = f'{API_BASE}/users/{user_id}/tweets?tweet.fields={fields}&max_results={min(max_results, 100)}&exclude=retweets'
+    url = f'{API_BASE}/users/{user_id}/tweets?tweet.fields={fields}&max_results={min(max_results, 100)}&exclude=retweets,replies'
     
     data = _make_request(url)
     tweets = data.get('data', [])
@@ -179,8 +179,8 @@ def get_user_tweets(user_id, max_results=100):
     
     return results
 
-def get_conversation(conversation_id, max_results=100):
-    query = urllib.parse.quote(f'conversation_id:{conversation_id}')
+def get_conversation(conversation_id, max_results=10):
+    query = urllib.parse.quote(f'conversation_id:{conversation_id} -is:retweet')
     fields = 'created_at,author_id,public_metrics,entities,in_reply_to_user_id,referenced_tweets'
     url = f'{API_BASE}/tweets/search/recent?query={query}&tweet.fields={fields}&expansions=author_id&user.fields=username,public_metrics&max_results={min(max_results, 100)}'
     
@@ -216,8 +216,8 @@ def get_conversation(conversation_id, max_results=100):
     
     return results
 
-def search_tweets(query, max_results=50):
-    encoded_query = urllib.parse.quote(f'{query} -is:retweet lang:en')
+def search_tweets(query, max_results=10):
+    encoded_query = urllib.parse.quote(f'{query} -is:retweet -is:reply lang:en')
     fields = 'created_at,author_id,public_metrics,entities'
     url = f'{API_BASE}/tweets/search/recent?query={encoded_query}&tweet.fields={fields}&expansions=author_id&user.fields=username,public_metrics&max_results={min(max_results, 100)}'
     

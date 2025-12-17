@@ -35,7 +35,7 @@ class handler(BaseHTTPRequestHandler):
             root_tweet = get_tweet(tweet_id)
             conversation_id = root_tweet.get('conversation_id', tweet_id)
             
-            replies = get_conversation(conversation_id, max_results=100)
+            replies = get_conversation(conversation_id, max_results=10)
             
             all_tweets = [root_tweet] + replies
             

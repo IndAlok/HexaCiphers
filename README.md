@@ -320,11 +320,56 @@ curl -X POST https://your-app.vercel.app/api/analyze-campaign \
 
 ## Limitations & Considerations
 
-- **Twitter API Constraints**: Subject to rate limits (300 requests/15 min for user timeline)
+- **Twitter API Free Tier (100 posts/month)**: Optimized for minimal quota consumption
 - **AI Quota Dependency**: Gemini API has free tier limits; fallback ensures continuity
 - **Language Support**: Optimized for English, Hindi, Hinglish; other languages use AI only
-- **Historical Data**: Analyzes recent tweets (up to 100 per user) from public profiles only
+- **Per-Analysis Limits**: 10 tweets per user/thread/campaign (for free tier)
 - **Accuracy**: Classification accuracy depends on context quality; best for political discourse
+
+---
+
+## API Rate Limit Optimization
+
+The system is designed to conserve Twitter API quota aggressively:
+
+### Quota Conservation Strategies
+
+**1. Minimal Fetch Size**
+- Default `max_results=10` per API call (instead of 100)
+- Each analysis consumes only ~10-11 tweets from monthly quota
+
+**2. Smart Query Filtering**
+All search queries automatically filter out noise:
+```
+-is:retweet -is:reply lang:en
+```
+This ensures quota is only spent on original, relevant content.
+
+**3. Database Caching**
+Results are cached to prevent redundant API calls:
+- User Analysis: **6-hour** cache TTL
+- Thread Analysis: **2-hour** cache TTL  
+- Campaign Analysis: **1-hour** cache TTL
+
+Repeated requests within cache window consume **zero** API quota.
+
+**4. Reply Exclusion**
+User timeline fetches exclude replies:
+```
+exclude=retweets,replies
+```
+This focuses analysis on user's original thoughts only.
+
+### Quota Usage Estimate
+
+| Action | Tweets Consumed | Notes |
+|--------|-----------------|-------|
+| User Analysis | ~10 | From user timeline |
+| Thread Analysis | ~11 | 1 root + 10 replies |
+| Campaign Analysis | ~10 | Search results |
+| Single Tweet | 1 | Just the tweet itself |
+
+**Monthly Capacity (Free Tier)**: Approximately 10 full analyses per month
 
 ---
 
@@ -391,7 +436,7 @@ Contributions are welcome. Please:
 
 ## Acknowledgments
 
-This project was developed for **Smart India Hackathon 2024**. Special thanks to:
+This project was developed with ❤️ by IndAlok[https://github.com/IndAlok]. Special thanks to:
 - Google Generative AI team for Gemini API access
 - Vercel for serverless infrastructure platform
 - Neon for PostgreSQL database services
@@ -401,7 +446,7 @@ This project was developed for **Smart India Hackathon 2024**. Special thanks to
 
 ## License
 
-MIT License - See LICENSE file for details
+MIT License
 
 ---
 
