@@ -11,7 +11,7 @@ DATABASE_URL = os.environ.get('DATABASE_URL')
 def get_connection():
     conn = None
     try:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, sslmode='require')
         yield conn
     finally:
         if conn:
