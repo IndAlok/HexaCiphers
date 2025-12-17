@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -66,9 +67,12 @@ const UserAnalysis = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const location = useLocation();
 
-  const handleAnalyze = async () => {
-    if (!username.trim()) return;
+  const handleAnalyze = useCallback(async (overrideUsername) => {
+    const targetUsername = typeof overrideUsername === 'string' ? overrideUsername : username;
+    if (!targetUsername?.trim()) return;
+
     setLoading(true);
     setError('');
     
@@ -76,7 +80,7 @@ const UserAnalysis = () => {
       const response = await fetch('/api/analyze-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: username.trim() })
+        body: JSON.stringify({ username: targetUsername.trim() })
       });
       const data = await response.json();
       if (response.ok) {
@@ -89,7 +93,16 @@ const UserAnalysis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [username]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const userParam = params.get('username');
+    if (userParam) {
+      setUsername(userParam);
+      handleAnalyze(userParam);
+    }
+  }, [location.search, handleAnalyze]);
 
   return (
     <Fade in timeout={500}>

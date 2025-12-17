@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -35,9 +36,12 @@ const URLAnalysis = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const location = useLocation();
 
-  const handleAnalyze = async () => {
-    if (!url.trim()) return;
+  const handleAnalyze = useCallback(async (overrideUrl) => {
+    const targetUrl = typeof overrideUrl === 'string' ? overrideUrl : url;
+    if (!targetUrl?.trim()) return;
+    
     setLoading(true);
     setError('');
     
@@ -45,7 +49,7 @@ const URLAnalysis = () => {
       const response = await fetch('/api/analyze-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: url.trim() })
+        body: JSON.stringify({ url: targetUrl.trim() })
       });
       const data = await response.json();
       if (response.ok) {
@@ -58,7 +62,16 @@ const URLAnalysis = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [url]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const urlParam = params.get('url');
+    if (urlParam) {
+      setUrl(urlParam);
+      handleAnalyze(urlParam);
+    }
+  }, [location.search, handleAnalyze]);
 
   const getSentimentIcon = (sentiment) => {
     if (sentiment === 'positive') return <SentimentSatisfied sx={{ color: theme.palette.success.main }} />;

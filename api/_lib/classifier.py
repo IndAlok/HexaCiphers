@@ -1,35 +1,48 @@
-POSITIVE_KEYWORDS = [
-    'good', 'great', 'excellent', 'amazing', 'wonderful', 'love', 'like', 'happy', 
-    'proud', 'best', 'fantastic', 'beautiful', 'awesome', 'perfect', 'brilliant',
-    'success', 'successful', 'proud', 'achievement', 'progress', 'growth', 'win',
-    'victory', 'celebrate', 'congratulations', 'inspiring', 'inspire', 'hope',
-    'support', 'thank', 'thanks', 'grateful', 'blessed', 'incredible'
-]
+# Weighted sentiment dictionaries
+POSITIVE_SCORES = {
+    'good': 1, 'great': 2, 'excellent': 3, 'amazing': 3, 'wonderful': 2, 'love': 3, 'like': 1, 
+    'happy': 2, 'proud': 2, 'best': 3, 'fantastic': 3, 'beautiful': 2, 'awesome': 3, 
+    'perfect': 3, 'brilliant': 3, 'success': 2, 'successful': 2, 'achievement': 2, 
+    'progress': 2, 'growth': 2, 'win': 2, 'victory': 2, 'celebrate': 2, 'congratulations': 2, 
+    'inspiring': 2, 'inspire': 2, 'hope': 1, 'support': 2, 'thank': 1, 'thanks': 1, 
+    'grateful': 2, 'blessed': 2, 'incredible': 3, 'masterpiece': 3, 'visionary': 3,
+    'strong': 1, 'powerful': 1, 'effective': 1, 'promising': 2, 'optimistic': 2
+}
 
-NEGATIVE_KEYWORDS = [
-    'bad', 'terrible', 'awful', 'hate', 'dislike', 'angry', 'sad', 'disappointed',
-    'worst', 'horrible', 'disgusting', 'pathetic', 'shameful', 'disgrace', 'fail',
-    'failure', 'disaster', 'crisis', 'corrupt', 'corruption', 'scam', 'fraud',
-    'lies', 'lying', 'fake', 'propaganda', 'manipulate', 'deceive', 'shame',
-    'destroy', 'attack', 'violence', 'threat', 'danger', 'fear', 'outrage'
-]
+NEGATIVE_SCORES = {
+    'bad': 1, 'terrible': 3, 'awful': 3, 'hate': 3, 'dislike': 2, 'angry': 2, 'sad': 1, 
+    'disappointed': 2, 'worst': 3, 'horrible': 3, 'disgusting': 3, 'pathetic': 3, 
+    'shameful': 3, 'disgrace': 3, 'fail': 2, 'failure': 2, 'disaster': 3, 'crisis': 2, 
+    'corrupt': 3, 'corruption': 3, 'scam': 3, 'fraud': 3, 'lies': 2, 'lying': 2, 
+    'fake': 2, 'propaganda': 2, 'manipulate': 2, 'deceive': 2, 'shame': 2, 'destroy': 3, 
+    'attack': 2, 'violence': 3, 'threat': 2, 'danger': 2, 'fear': 1, 'outrage': 2,
+    'useless': 2, 'incompetent': 3, 'weak': 1, 'hopeless': 2, 'trash': 3, 'nonsense': 2
+}
 
-PRO_INDIA_KEYWORDS = [
-    'proud india', 'love india', 'support india', 'incredible india', 'digital india',
-    'make in india', 'jai hind', 'proud indian', 'india rocks', 'vande mataram',
-    'bharat mata', 'mera bharat', 'indian pride', 'india first', 'india wins',
-    'india success', 'indian achievement', 'india growth', 'india progress',
-    'india development', 'india innovation', 'india rising', 'india shining',
-    'proud to be indian', 'love my country', 'my india', 'our india'
-]
+# Weighted Stance Indicators
+PRO_INDIA_SCORES = {
+    'proud india': 3, 'love india': 3, 'support india': 3, 'incredible india': 2, 
+    'digital india': 1, 'make in india': 1, 'jai hind': 4, 'proud indian': 3, 
+    'india rocks': 2, 'vande mataram': 4, 'bharat mata': 4, 'mera bharat': 3, 
+    'indian pride': 3, 'india first': 3, 'india wins': 2, 'india success': 2, 
+    'india growth': 2, 'india progress': 2, 'india development': 2, 'india innovation': 2, 
+    'india rising': 2, 'india shining': 2, 'proud to be indian': 4, 'love my country': 3, 
+    'my india': 1, 'our india': 1, 'vishwaguru': 2, 'atmanirbhar': 2, 'developed india': 2,
+    'modi': 0.5, 'yogi': 0.5, 'bjp': 0.5, 'rss': 0.5  # Context dependent
+}
 
-ANTI_INDIA_KEYWORDS = [
-    'boycott india', 'anti india', 'hate india', 'destroy india', 'fake india',
-    'antiindia', 'boycottindia', 'shameindia', 'indiafails', 'india fails',
-    'indiaout', 'india out', 'against india', 'india exposed', 'india lies',
-    'india propaganda', 'india genocide', 'india terrorism', 'india fascist',
-    'india nazi', 'india apartheid', 'india atrocities', 'india crimes'
-]
+ANTI_INDIA_SCORES = {
+    'boycott india': 5, 'anti india': 5, 'hate india': 5, 'destroy india': 5, 
+    'fake india': 4, 'antiindia': 5, 'boycottindia': 5, 'shameindia': 5, 
+    'indiafails': 4, 'india fails': 4, 'indiaout': 5, 'india out': 5, 
+    'against india': 3, 'india exposed': 3, 'india lies': 4, 'india propaganda': 4, 
+    'india genocide': 5, 'india terrorism': 5, 'india fascist': 5, 'india nazi': 5, 
+    'india apartheid': 5, 'india atrocities': 4, 'india crimes': 4,
+    'intolerant india': 3, 'unsafe india': 3, 'rape capital': 4, 'lynchistan': 5,
+    'minorities unsafe': 2, 'islamophobia': 2, 'hindutva terror': 5, 'saffron terror': 5,
+    'fascist modi': 4, 'dictator': 2, 'democracy died': 3, 'pogrom': 4,
+    'occupied kashmir': 5, 'free kashmir': 5, 'khalistan': 5, 'terrorist state': 5
+}
 
 BOT_INDICATORS = {
     'default_profile': 0.15,
@@ -42,26 +55,46 @@ BOT_INDICATORS = {
     'repetitive_content': 0.05
 }
 
+def preprocess_text(text):
+    """Normalize text for improved matching."""
+    return ' ' + text.lower().replace('#', ' ').replace('@', ' ').replace('-', ' ').replace('_', ' ') + ' '
+
 def classify_sentiment(text):
     if not text:
         return {'label': 'neutral', 'score': 0.0, 'confidence': 0.5}
     
-    text_lower = text.lower()
-    pos_count = sum(1 for w in POSITIVE_KEYWORDS if w in text_lower)
-    neg_count = sum(1 for w in NEGATIVE_KEYWORDS if w in text_lower)
-    total = pos_count + neg_count
+    text_processed = preprocess_text(text)
     
-    if total == 0:
+    pos_score = 0
+    neg_score = 0
+    
+    # Check weighted keywords
+    for word, weight in POSITIVE_SCORES.items():
+        if f' {word} ' in text_processed:
+            pos_score += weight
+    
+    for word, weight in NEGATIVE_SCORES.items():
+        if f' {word} ' in text_processed:
+            neg_score += weight
+            
+    # Negation handling (simple)
+    if ' not ' in text_processed or ' no ' in text_processed or " don't " in text_processed:
+        # Flip dominant sentiment score slightly to reduce confidence or invert
+        pass # Too complex for simple script, relying on strong phrase matches
+    
+    total_score = pos_score + neg_score
+    
+    if total_score == 0:
         return {'label': 'neutral', 'score': 0.0, 'confidence': 0.6}
     
-    score = (pos_count - neg_count) / max(total, 1)
+    final_score = (pos_score - neg_score) / max(total_score, 1)
     
-    if pos_count > neg_count:
-        confidence = min(0.95, 0.5 + pos_count * 0.08)
-        return {'label': 'positive', 'score': score, 'confidence': confidence}
-    elif neg_count > pos_count:
-        confidence = min(0.95, 0.5 + neg_count * 0.08)
-        return {'label': 'negative', 'score': score, 'confidence': confidence}
+    if pos_score > neg_score:
+        confidence = min(0.99, 0.6 + (pos_score / (total_score + 1)) * 0.4)
+        return {'label': 'positive', 'score': final_score, 'confidence': confidence}
+    elif neg_score > pos_score:
+        confidence = min(0.99, 0.6 + (neg_score / (total_score + 1)) * 0.4)
+        return {'label': 'negative', 'score': final_score, 'confidence': confidence}
     
     return {'label': 'neutral', 'score': 0.0, 'confidence': 0.6}
 
@@ -69,25 +102,38 @@ def classify_stance(text):
     if not text:
         return {'label': 'Neutral', 'score': 0.0, 'confidence': 0.5}
     
-    text_lower = text.lower()
-    pro_count = sum(1 for p in PRO_INDIA_KEYWORDS if p in text_lower)
-    anti_count = sum(1 for p in ANTI_INDIA_KEYWORDS if p in text_lower)
-    total = pro_count + anti_count
+    text_processed = preprocess_text(text)
+    
+    pro_score = 0
+    anti_score = 0
+    
+    # Weighted Phrase Matching
+    for phrase, weight in PRO_INDIA_SCORES.items():
+        if phrase in text_processed:
+            pro_score += weight
+            
+    for phrase, weight in ANTI_INDIA_SCORES.items():
+        if phrase in text_processed:
+            anti_score += weight
+            
+    # Contextual Boosts (simple n-gram lookups for context)
+    if 'support' in text_processed and 'india' in text_processed: pro_score += 1
+    if 'against' in text_processed and 'india' in text_processed: anti_score += 1
+    
+    total = pro_score + anti_score
     
     if total == 0:
-        india_mentions = text_lower.count('india') + text_lower.count('bharat') + text_lower.count('indian')
-        if india_mentions > 0:
-            return {'label': 'Neutral', 'score': 0.0, 'confidence': 0.7}
-        return {'label': 'Neutral', 'score': 0.0, 'confidence': 0.9}
+        return {'label': 'Neutral', 'score': 0.0, 'confidence': 0.7}
     
-    score = (pro_count - anti_count) / max(total, 1)
+    score = (pro_score - anti_score) / max(total, 1)
     
-    if pro_count > anti_count:
-        confidence = min(0.95, 0.5 + pro_count * 0.12)
-        return {'label': 'Pro-India', 'score': score, 'confidence': confidence}
-    elif anti_count > pro_count:
-        confidence = min(0.95, 0.5 + anti_count * 0.12)
+    # Threshold for Anti-India (bias detection) - lower threshold for detection
+    if anti_score >= 2 or (anti_score > pro_score):
+        confidence = min(0.99, 0.6 + (anti_score / (total + 1)) * 0.4)
         return {'label': 'Anti-India', 'score': score, 'confidence': confidence}
+    elif pro_score > anti_score:
+        confidence = min(0.99, 0.6 + (pro_score / (total + 1)) * 0.4)
+        return {'label': 'Pro-India', 'score': score, 'confidence': confidence}
     
     return {'label': 'Neutral', 'score': 0.0, 'confidence': 0.6}
 

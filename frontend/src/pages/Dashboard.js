@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Grid,
@@ -107,6 +108,27 @@ const Dashboard = () => {
 
   const overview = stats?.overview || {};
   const sentiment = stats?.sentiment_distribution || {};
+
+  const navigate = useNavigate();
+
+  const handleAnalyze = () => {
+    if (!searchQuery.trim()) return;
+
+    const query = searchQuery.trim();
+    // Simple heuristic: if it contains http or twitter.com or x.com, it's a URL
+    if (query.match(/^(http|https:\/\/|www\.|twitter\.com|x\.com)/)) {
+      navigate(`/analysis/url?url=${encodeURIComponent(query)}`);
+    } else {
+      // Otherwise treat as username
+      navigate(`/analysis/user?username=${encodeURIComponent(query.replace('@', ''))}`);
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') {
+      handleAnalyze();
+    }
+  };
 
   if (loading) {
     return (
@@ -251,6 +273,7 @@ const Dashboard = () => {
                   placeholder="Enter tweet URL or username..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleKeyPress}
                   sx={{ mb: 2 }}
                   InputProps={{
                     startAdornment: <Search sx={{ mr: 1, color: 'text.secondary' }} />,
@@ -261,6 +284,7 @@ const Dashboard = () => {
                   variant="contained"
                   size="large"
                   startIcon={<Analytics />}
+                  onClick={handleAnalyze}
                   disabled={!searchQuery.trim()}
                 >
                   Analyze
