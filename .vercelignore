@@ -1,0 +1,55 @@
+# Dependencies
+frontend/node_modules
+node_modules
+
+# Build artifacts
+frontend/build
+frontend/.next
+
+# Git
+.git
+.github
+
+# Environment files (use Vercel dashboard for env vars)
+.env
+.env.local
+.env.*.local
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.py[cod]
+*$py.class
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Testing
+frontend/coverage
+*.test.js
+*.spec.js
+
+# Documentation
+*.md
+!README.md
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Misc
+*.orig
+.cache
