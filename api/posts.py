@@ -8,13 +8,12 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        
         try:
             from api._lib.db import get_posts, DATABASE_URL
             
             if not DATABASE_URL:
                 self.send_response(503)
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({
@@ -37,6 +36,7 @@ class handler(BaseHTTPRequestHandler):
                 serialized.append(item)
             
             self.send_response(200)
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             
@@ -48,6 +48,7 @@ class handler(BaseHTTPRequestHandler):
             
         except Exception as e:
             self.send_response(500)
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({
