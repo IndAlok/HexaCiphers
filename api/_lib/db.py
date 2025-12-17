@@ -5,14 +5,26 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta
 import json
 
-DATABASE_URL = os.environ.get('DATABASE_URL')
+DATABASE_URL = os.environ.get('DATABASE_URL', '')
+
+def get_db_url():
+    url = DATABASE_URL
+    if url and 'sslmode' not in url:
+        separator = '&' if '?' in url else '?'
+        url = f"{url}{separator}sslmode=require"
+    return url
 
 @contextmanager
 def get_connection():
     conn = None
+    db_url = get_db_url()
+    if not db_url:
+        raise Exception("DATABASE_URL environment variable is not set")
     try:
-        conn = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor, sslmode='require')
+        conn = psycopg2.connect(db_url, cursor_factory=RealDictCursor)
         yield conn
+    except psycopg2.OperationalError as e:
+        raise Exception(f"Database connection failed: {str(e)}")
     finally:
         if conn:
             conn.close()
