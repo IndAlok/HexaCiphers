@@ -1,279 +1,253 @@
 import React, { useState, useEffect } from 'react';
-import { Settings as SettingsIcon, Database, Shield, Bell, Check, RefreshCw } from 'lucide-react';
+import {
+  Box,
+  Card,
+  CardContent,
+  Typography,
+  Switch,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  Divider,
+  Button,
+  Alert,
+  CircularProgress,
+  useTheme,
+  alpha,
+  Fade,
+  Chip,
+  Grid
+} from '@mui/material';
+import {
+  Palette,
+  Notifications,
+  Storage,
+  Dns,
+  Save,
+  Cached,
+  CheckCircle,
+  Error as ErrorIcon
+} from '@mui/icons-material';
+import { useThemeMode } from '../ThemeContext';
 
-const Settings = ({ darkMode }) => {
+const Settings = () => {
+  const theme = useTheme();
+  const { mode, setMode } = useThemeMode();
+  
+  // Local state for settings that might be stored in localStorage
   const [settings, setSettings] = useState({
-    collectionInterval: 5,
-    riskThreshold: 0.7,
-    minCampaignVolume: 5,
-    highRiskAlerts: true,
-    botDetectionAlerts: true,
-    dailySummary: false
+    notifications: true,
+    autoRefresh: true,
+    highContrast: false,
   });
   
-  const [systemStatus, setSystemStatus] = useState({
-    database: 'checking',
-    mlModels: 'checking',
-    version: '1.0.0',
-    lastUpdate: new Date().toLocaleDateString()
-  });
-  
-  const [saved, setSaved] = useState(false);
-  const [checking, setChecking] = useState(false);
+  const [healthStatus, setHealthStatus] = useState(null);
+  const [checkingHealth, setCheckingHealth] = useState(false);
+  const [message, setMessage] = useState({ type: '', text: '' });
 
+  // Load settings from localStorage
   useEffect(() => {
-    const savedSettings = localStorage.getItem('hexaciphers_settings');
+    const savedSettings = localStorage.getItem('appSettings');
     if (savedSettings) {
-      try {
-        setSettings(JSON.parse(savedSettings));
-      } catch (e) {}
+      setSettings(JSON.parse(savedSettings));
     }
-    checkSystemStatus();
+    checkSystemHealth();
   }, []);
 
-  const checkSystemStatus = async () => {
-    setChecking(true);
-    try {
-      const response = await fetch('/api/health');
-      if (response.ok) {
-        setSystemStatus(prev => ({ ...prev, database: 'connected', mlModels: 'loaded' }));
-      } else {
-        setSystemStatus(prev => ({ ...prev, database: 'disconnected', mlModels: 'unavailable' }));
-      }
-    } catch (error) {
-      setSystemStatus(prev => ({ ...prev, database: 'disconnected', mlModels: 'unavailable' }));
-    } finally {
-      setChecking(false);
-    }
-  };
-
-  const handleSettingChange = (key, value) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
-    setSaved(false);
+  const handleSettingChange = (setting) => (event) => {
+    setSettings((prev) => ({
+      ...prev,
+      [setting]: event.target.checked,
+    }));
   };
 
   const saveSettings = () => {
-    localStorage.setItem('hexaciphers_settings', JSON.stringify(settings));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+    localStorage.setItem('appSettings', JSON.stringify(settings));
+    setMessage({ type: 'success', text: 'Settings saved successfully' });
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'connected':
-      case 'loaded':
-        return 'text-green-400';
-      case 'disconnected':
-      case 'unavailable':
-        return 'text-red-400';
-      default:
-        return 'text-yellow-400';
+  const checkSystemHealth = async () => {
+    setCheckingHealth(true);
+    try {
+      const res = await fetch('/api/health');
+      const data = await res.json();
+      setHealthStatus(data);
+    } catch (error) {
+      setHealthStatus({ status: 'error', error: 'Failed to connect' });
+    } finally {
+      setCheckingHealth(false);
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'connected':
-        return 'Connected';
-      case 'loaded':
-        return 'Loaded';
-      case 'disconnected':
-        return 'Disconnected';
-      case 'unavailable':
-        return 'Unavailable';
-      default:
-        return 'Checking...';
-    }
+  const clearCache = () => {
+    // In a real app this might call an API endpoint or clear specific local storage keys
+    localStorage.removeItem('user_cache'); // Example
+    setMessage({ type: 'info', text: 'Local cache cleared' });
+    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
   };
 
   return (
-    <div className="space-y-8 fade-in">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-2">
+    <Fade in timeout={500}>
+      <Box maxWidth="md">
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
           Settings
-        </h1>
-        <p className="text-xl text-white/80 font-medium">
-          Configure system parameters and monitoring settings
-        </p>
-      </div>
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          Manage application preferences and system status
+        </Typography>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className={`${darkMode ? 'dashboard-card-dark' : 'dashboard-card'} slide-up`}>
-          <div className="flex items-center space-x-3 mb-6">
-            <Database className="h-6 w-6 text-blue-400" />
-            <h3 className="text-xl font-bold text-white">Data Collection</h3>
-          </div>
-          
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-white/80 mb-2">
-                Collection Interval (minutes)
-              </label>
-              <input
-                type="number"
-                value={settings.collectionInterval}
-                onChange={(e) => handleSettingChange('collectionInterval', parseInt(e.target.value) || 5)}
-                min="1"
-                max="60"
-                className={`${darkMode ? 'input-modern-dark' : 'input-modern'}`}
-              />
-            </div>
+        {message.text && (
+          <Alert severity={message.type} sx={{ mb: 3 }}>
+            {message.text}
+          </Alert>
+        )}
+
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Palette sx={{ mr: 1.5, color: theme.palette.primary.main }} />
+              <Typography variant="h6" fontWeight={600}>Appearance</Typography>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
             
-            <div>
-              <label className="block text-sm font-semibold text-white/80 mb-3">
-                Platform Configuration
-              </label>
-              <div className="space-y-3">
-                <label className="flex items-center p-3 bg-white/5 rounded-xl border border-white/10 cursor-not-allowed">
-                  <input type="checkbox" checked disabled className="mr-3 h-4 w-4" />
-                  <span className="text-sm text-white/80">Twitter/X</span>
-                  <span className="ml-auto text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded-lg">Active</span>
-                </label>
-              </div>
-              <p className="text-xs text-white/50 mt-3">
-                Currently monitoring Twitter/X for anti-India campaigns and sentiment analysis.
-              </p>
-            </div>
-          </div>
-        </div>
+            <List disablePadding>
+              <ListItem>
+                <ListItemText 
+                  primary="Dark Mode" 
+                  secondary="Use dark theme for low-light environments" 
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={mode === 'dark'}
+                    onChange={() => setMode(mode === 'dark' ? 'light' : 'dark')}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+          </CardContent>
+        </Card>
 
-        <div className={`${darkMode ? 'dashboard-card-dark' : 'dashboard-card'} slide-up`} style={{animationDelay: '0.1s'}}>
-          <div className="flex items-center space-x-3 mb-6">
-            <Shield className="h-6 w-6 text-red-400" />
-            <h3 className="text-xl font-bold text-white">Detection Settings</h3>
-          </div>
-          
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-white/80 mb-2">
-                Risk Threshold: {Math.round(settings.riskThreshold * 100)}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={settings.riskThreshold}
-                onChange={(e) => handleSettingChange('riskThreshold', parseFloat(e.target.value))}
-                className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer accent-purple-500"
-              />
-              <div className="flex justify-between text-xs text-white/50 mt-1">
-                <span>Low (More alerts)</span>
-                <span>High (Fewer alerts)</span>
-              </div>
-            </div>
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Notifications sx={{ mr: 1.5, color: theme.palette.secondary.main }} />
+              <Typography variant="h6" fontWeight={600}>Notifications & Behavior</Typography>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
             
-            <div>
-              <label className="block text-sm font-semibold text-white/80 mb-2">
-                Minimum Campaign Volume
-              </label>
-              <input
-                type="number"
-                value={settings.minCampaignVolume}
-                onChange={(e) => handleSettingChange('minCampaignVolume', parseInt(e.target.value) || 5)}
-                min="1"
-                max="100"
-                className={`${darkMode ? 'input-modern-dark' : 'input-modern'}`}
-              />
-            </div>
-          </div>
-        </div>
+            <List disablePadding>
+              <ListItem>
+                <ListItemText 
+                  primary="Enable Notifications" 
+                  secondary="Receive alerts for high-risk campaigns" 
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={settings.notifications}
+                    onChange={handleSettingChange('notifications')}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+              <Divider component="li" />
+              <ListItem>
+                <ListItemText 
+                  primary="Auto-Refresh Data" 
+                  secondary="Automatically update dashboard statistics every minute" 
+                />
+                <ListItemSecondaryAction>
+                  <Switch
+                    edge="end"
+                    checked={settings.autoRefresh}
+                    onChange={handleSettingChange('autoRefresh')}
+                  />
+                </ListItemSecondaryAction>
+              </ListItem>
+            </List>
+          </CardContent>
+        </Card>
 
-        <div className={`${darkMode ? 'dashboard-card-dark' : 'dashboard-card'} slide-up`} style={{animationDelay: '0.2s'}}>
-          <div className="flex items-center space-x-3 mb-6">
-            <Bell className="h-6 w-6 text-yellow-400" />
-            <h3 className="text-xl font-bold text-white">Alert Settings</h3>
-          </div>
-          
-          <div className="space-y-4">
-            <label className="flex items-center p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
-              <input 
-                type="checkbox" 
-                checked={settings.highRiskAlerts}
-                onChange={(e) => handleSettingChange('highRiskAlerts', e.target.checked)}
-                className="mr-3 h-4 w-4 accent-purple-500" 
-              />
-              <span className="text-sm text-white/80">High risk campaign alerts</span>
-            </label>
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+              <Dns sx={{ mr: 1.5, color: theme.palette.info.main }} />
+              <Typography variant="h6" fontWeight={600}>System Status</Typography>
+            </Box>
+            <Divider sx={{ mb: 2 }} />
+
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
+              <Box>
+                <Typography variant="subtitle1" fontWeight={500}>API Connection</Typography>
+                <Typography variant="caption" color="text.secondary">Status of the backend server</Typography>
+              </Box>
+              {checkingHealth ? (
+                <CircularProgress size={20} />
+              ) : healthStatus?.status === 'healthy' ? (
+                <Chip icon={<CheckCircle />} label="Healthy" color="success" size="small" />
+              ) : (
+                <Chip icon={<ErrorIcon />} label="Error" color="error" size="small" />
+              )}
+            </Box>
+
+            {healthStatus && (
+              <Box sx={{ bgcolor: alpha(theme.palette.background.default, 0.5), p: 2, borderRadius: 2 }}>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">Database</Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {healthStatus.checks?.database ? 'Connected' : 'Disconnected'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="caption" color="text.secondary">Twitter API</Typography>
+                    <Typography variant="body2" fontWeight={600}>
+                      {healthStatus.checks?.twitter_api ? 'Configured' : 'Missing Config'}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="caption" color="text.secondary">Environment</Typography>
+                    <Typography variant="body2">{healthStatus.environment || 'Production'}</Typography>
+                  </Grid>
+                </Grid>
+              </Box>
+            )}
             
-            <label className="flex items-center p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
-              <input 
-                type="checkbox" 
-                checked={settings.botDetectionAlerts}
-                onChange={(e) => handleSettingChange('botDetectionAlerts', e.target.checked)}
-                className="mr-3 h-4 w-4 accent-purple-500" 
-              />
-              <span className="text-sm text-white/80">Bot detection alerts</span>
-            </label>
-            
-            <label className="flex items-center p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:bg-white/10 transition-colors">
-              <input 
-                type="checkbox" 
-                checked={settings.dailySummary}
-                onChange={(e) => handleSettingChange('dailySummary', e.target.checked)}
-                className="mr-3 h-4 w-4 accent-purple-500" 
-              />
-              <span className="text-sm text-white/80">Daily summary reports</span>
-            </label>
-          </div>
-        </div>
+            <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+              <Button 
+                variant="outlined" 
+                startIcon={<Cached />} 
+                onClick={checkSystemHealth}
+                disabled={checkingHealth}
+                size="small"
+              >
+                Refresh Status
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
 
-        <div className={`${darkMode ? 'dashboard-card-dark' : 'dashboard-card'} slide-up`} style={{animationDelay: '0.3s'}}>
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <SettingsIcon className="h-6 w-6 text-gray-400" />
-              <h3 className="text-xl font-bold text-white">System Information</h3>
-            </div>
-            <button
-              onClick={checkSystemStatus}
-              disabled={checking}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
-            >
-              <RefreshCw className={`h-4 w-4 text-white/60 ${checking ? 'animate-spin' : ''}`} />
-            </button>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-              <span className="text-sm text-white/60">Version</span>
-              <span className="text-sm font-semibold text-white">{systemStatus.version}</span>
-            </div>
-            <div className="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-              <span className="text-sm text-white/60">API Status</span>
-              <span className={`text-sm font-semibold ${getStatusColor(systemStatus.database)}`}>
-                {getStatusText(systemStatus.database)}
-              </span>
-            </div>
-            <div className="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-              <span className="text-sm text-white/60">ML Models</span>
-              <span className={`text-sm font-semibold ${getStatusColor(systemStatus.mlModels)}`}>
-                {getStatusText(systemStatus.mlModels)}
-              </span>
-            </div>
-            <div className="flex justify-between p-3 bg-white/5 rounded-xl border border-white/10">
-              <span className="text-sm text-white/60">Last Update</span>
-              <span className="text-sm font-semibold text-white">{systemStatus.lastUpdate}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-end">
-        <button 
-          onClick={saveSettings}
-          className="btn-primary flex items-center space-x-2"
-        >
-          {saved ? (
-            <>
-              <Check className="h-5 w-5" />
-              <span>Saved!</span>
-            </>
-          ) : (
-            <span>Save Settings</span>
-          )}
-        </button>
-      </div>
-    </div>
+        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+          <Button 
+            variant="outlined" 
+            color="error" 
+            startIcon={<Storage />} 
+            onClick={clearCache}
+          >
+            Clear Local Cache
+          </Button>
+          <Button 
+            variant="contained" 
+            startIcon={<Save />} 
+            onClick={saveSettings}
+          >
+            Save Changes
+          </Button>
+        </Box>
+      </Box>
+    </Fade>
   );
 };
 

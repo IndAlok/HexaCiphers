@@ -1,130 +1,201 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { 
-  BarChart3, Shield, TrendingUp, Settings, Hash,
-  X, Link as LinkIcon, User, MessageSquare, Activity
-} from 'lucide-react';
+import React from 'react';
+import { useLocation, Link as RouterLink } from 'react-router-dom';
+import {
+  Drawer,
+  Box,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+  Divider,
+  Chip,
+  useTheme,
+  alpha,
+} from '@mui/material';
+import {
+  Dashboard,
+  Person,
+  Forum,
+  Tag,
+  Link as LinkIcon,
+  Analytics,
+  Settings,
+  Shield,
+  TrendingUp,
+} from '@mui/icons-material';
+import { useThemeMode } from '../ThemeContext';
 
-const navigation = [
-  { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-  { name: 'User Analysis', href: '/user-analysis', icon: User },
-  { name: 'Thread Analysis', href: '/thread-analysis', icon: MessageSquare },
-  { name: 'Campaign Analysis', href: '/campaign-analysis', icon: Hash },
-  { name: 'Tweet Analysis', href: '/url-analysis', icon: LinkIcon },
-  { name: 'Analytics', href: '/analytics', icon: TrendingUp },
-  { name: 'Settings', href: '/settings', icon: Settings },
+const navItems = [
+  { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
+  { text: 'User Analysis', icon: <Person />, path: '/user-analysis' },
+  { text: 'Thread Analysis', icon: <Forum />, path: '/thread-analysis' },
+  { text: 'Campaign Analysis', icon: <Tag />, path: '/campaign-analysis' },
+  { text: 'Tweet Analysis', icon: <LinkIcon />, path: '/url-analysis' },
+  { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
+  { text: 'Settings', icon: <Settings />, path: '/settings' },
 ];
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen, darkMode }) => {
+const Sidebar = ({ drawerWidth, mobileOpen, onDrawerToggle }) => {
   const location = useLocation();
-  const [stats, setStats] = useState({ posts: 0, users: 0, campaigns: 0 });
+  const theme = useTheme();
+  const { mode } = useThemeMode();
 
-  useEffect(() => {
-    fetch('/api/stats')
-      .then(res => res.json())
-      .then(data => {
-        if (data.status === 'success' && data.data) {
-          setStats({
-            posts: data.data.overview?.total_posts || 0,
-            users: data.data.overview?.total_users || 0,
-            campaigns: data.data.overview?.total_campaigns || 0
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
+  const drawerContent = (
+    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <Box
+        sx={{
+          p: 3,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+        }}
+      >
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: 2,
+            background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.secondary.main} 100%)`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: `0 4px 14px ${alpha(theme.palette.primary.main, 0.4)}`,
+          }}
+        >
+          <Shield sx={{ color: 'white', fontSize: 28 }} />
+        </Box>
+        <Box>
+          <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+            HexaCiphers
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            Sentiment Analyzer
+          </Typography>
+        </Box>
+      </Box>
+
+      <Divider sx={{ mx: 2 }} />
+
+      <List sx={{ flex: 1, px: 2, py: 2 }}>
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path || 
+            (item.path === '/dashboard' && location.pathname === '/');
+          
+          return (
+            <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+              <ListItemButton
+                component={RouterLink}
+                to={item.path}
+                onClick={onDrawerToggle}
+                sx={{
+                  borderRadius: 2,
+                  py: 1.5,
+                  transition: 'all 0.2s ease',
+                  ...(isActive && {
+                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)} 0%, ${alpha(theme.palette.secondary.main, 0.15)} 100%)`,
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+                    '& .MuiListItemIcon-root': {
+                      color: theme.palette.primary.main,
+                    },
+                    '& .MuiListItemText-primary': {
+                      color: theme.palette.primary.main,
+                      fontWeight: 600,
+                    },
+                  }),
+                  '&:hover': {
+                    background: alpha(theme.palette.primary.main, 0.1),
+                    transform: 'translateX(4px)',
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText 
+                  primary={item.text}
+                  primaryTypographyProps={{
+                    fontSize: '0.9rem',
+                    fontWeight: isActive ? 600 : 500,
+                  }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+
+      <Box sx={{ p: 2 }}>
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            background: mode === 'dark' 
+              ? alpha(theme.palette.primary.main, 0.1)
+              : alpha(theme.palette.primary.main, 0.05),
+            border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+              API Status
+            </Typography>
+            <Chip
+              label="Online"
+              size="small"
+              color="success"
+              sx={{ height: 22, fontSize: '0.7rem' }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+            <TrendingUp sx={{ fontSize: 18, color: theme.palette.success.main }} />
+            <Typography variant="caption" color="text.secondary">
+              Real-time monitoring active
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
 
   return (
-    <>
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-64 ${darkMode ? 'glass-dark' : 'glass-card'} shadow-xl transform transition-all duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 border-r border-white/20
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center justify-between px-4 border-b border-white/20">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Shield className="h-6 w-6 text-white drop-shadow-lg" />
-                <div className="absolute inset-0 h-6 w-6 bg-white/20 rounded-full blur-lg"></div>
-              </div>
-              <span className="text-lg font-bold text-white drop-shadow-sm">HexaCiphers</span>
-            </div>
-            <button
-              type="button"
-              className="lg:hidden text-white/80 hover:text-white transition-colors duration-200"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-
-          <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
-            {navigation.map((item) => {
-              const isActive = location.pathname === item.href || 
-                (item.href === '/dashboard' && location.pathname === '/');
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`
-                    group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 relative overflow-hidden
-                    ${isActive
-                      ? 'bg-white/20 text-white shadow-lg backdrop-blur-sm border border-white/30'
-                      : 'text-white/70 hover:bg-white/10 hover:text-white'
-                    }
-                  `}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  {isActive && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-500/20 rounded-lg"></div>
-                  )}
-                  <item.icon className={`mr-3 h-5 w-5 relative z-10 ${isActive ? 'text-white' : 'text-white/60'}`} />
-                  <span className="relative z-10">{item.name}</span>
-                </Link>
-              );
-            })}
-          </nav>
-
-          <div className="px-3 py-3">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-white">Statistics</span>
-                <Activity className="h-3 w-3 text-green-400 pulse-status" />
-              </div>
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/70">Posts Analyzed</span>
-                  <span className="text-blue-400 font-semibold">{stats.posts}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/70">Users Profiled</span>
-                  <span className="text-purple-400 font-semibold">{stats.users}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-white/70">Campaigns</span>
-                  <span className="text-orange-400 font-semibold">{stats.campaigns}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-white/20 p-3">
-            <div className="bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg p-3 border border-white/10">
-              <div className="text-xs text-white/80 mb-1">Powered by</div>
-              <div className="text-sm font-semibold text-white">Twitter API v2</div>
-              <div className="text-xs text-white/60 mt-1">Real-time analysis</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
+    <Box
+      component="nav"
+      sx={{ width: { md: drawerWidth }, flexShrink: { md: 0 } }}
+    >
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={onDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: 'block', md: 'none' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            background: theme.palette.background.paper,
+          },
+        }}
+      >
+        {drawerContent}
+      </Drawer>
+      <Drawer
+        variant="permanent"
+        sx={{
+          display: { xs: 'none', md: 'block' },
+          '& .MuiDrawer-paper': {
+            boxSizing: 'border-box',
+            width: drawerWidth,
+            background: theme.palette.background.paper,
+            borderRight: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+          },
+        }}
+        open
+      >
+        {drawerContent}
+      </Drawer>
+    </Box>
   );
 };
 

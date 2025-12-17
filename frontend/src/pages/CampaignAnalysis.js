@@ -1,21 +1,44 @@
 import React, { useState } from 'react';
-import { 
-  Hash, Search, AlertTriangle, Users, 
-  TrendingUp, BarChart3, Bot, Zap
-} from 'lucide-react';
+import {
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  Alert,
+  Chip,
+  Avatar,
+  useTheme,
+  alpha,
+  Fade,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+} from '@mui/material';
+import {
+  Tag,
+  Search,
+  Group,
+  TrendingUp,
+  SmartToy,
+  Whatshot,
+} from '@mui/icons-material';
 
-const CampaignAnalysis = ({ darkMode }) => {
+const CampaignAnalysis = () => {
+  const theme = useTheme();
   const [hashtag, setHashtag] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
 
   const handleAnalyze = async () => {
-    if (!hashtag.trim()) {
-      setError('Please enter a hashtag');
-      return;
-    }
-
+    if (!hashtag.trim()) return;
     setLoading(true);
     setError('');
     
@@ -25,9 +48,7 @@ const CampaignAnalysis = ({ darkMode }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ hashtag: hashtag.trim() })
       });
-
       const data = await response.json();
-      
       if (response.ok) {
         setResult(data.data);
       } else {
@@ -40,183 +61,211 @@ const CampaignAnalysis = ({ darkMode }) => {
     }
   };
 
-  const getRiskLabel = (score) => {
-    if (score >= 70) return { label: 'High Risk', color: 'text-red-400', bg: 'bg-red-900/30' };
-    if (score >= 40) return { label: 'Medium Risk', color: 'text-yellow-400', bg: 'bg-yellow-900/30' };
-    return { label: 'Low Risk', color: 'text-green-400', bg: 'bg-green-900/30' };
+  const getRiskColor = (score) => {
+    if (score >= 70) return theme.palette.error.main;
+    if (score >= 40) return theme.palette.warning.main;
+    return theme.palette.success.main;
   };
 
   return (
-    <div className="space-y-8 fade-in">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-white drop-shadow-lg mb-2">Campaign Analysis</h1>
-        <p className="text-xl text-white/80 font-medium">
-          Analyze hashtag campaigns for coordination patterns and bot activity
-        </p>
-      </div>
+    <Fade in timeout={500}>
+      <Box>
+        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+          Campaign Analysis
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+          Detect coordinated hashtag campaigns and bot activity
+        </Typography>
 
-      <div className="dashboard-card slide-up">
-        <div className="flex items-center space-x-3 mb-6">
-          <Hash className="h-6 w-6 text-green-400" />
-          <h2 className="text-xl font-bold text-white">Enter Hashtag</h2>
-        </div>
-        
-        <div className="flex space-x-3">
-          <input
-            type="text"
-            value={hashtag}
-            onChange={(e) => setHashtag(e.target.value)}
-            placeholder="#IndiaFirst or IndiaFirst"
-            className="flex-1 input-modern"
-            disabled={loading}
-            onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
-          />
-          <button
-            onClick={handleAnalyze}
-            disabled={loading || !hashtag.trim()}
-            className="btn-primary disabled:opacity-50 flex items-center space-x-2"
-          >
-            {loading ? (
-              <><div className="loading-spinner h-4 w-4"></div><span>Analyzing...</span></>
-            ) : (
-              <><Search className="h-4 w-4" /><span>Analyze Campaign</span></>
-            )}
-          </button>
-        </div>
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="Hashtag"
+                placeholder="#DigitalIndia or DigitalIndia"
+                value={hashtag}
+                onChange={(e) => setHashtag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAnalyze()}
+                InputProps={{
+                  startAdornment: <Tag sx={{ mr: 1, color: 'text.secondary' }} />,
+                }}
+              />
+              <Button
+                variant="contained"
+                size="large"
+                onClick={handleAnalyze}
+                disabled={loading || !hashtag.trim()}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <Search />}
+                sx={{ minWidth: 160 }}
+              >
+                {loading ? 'Analyzing...' : 'Analyze'}
+              </Button>
+            </Box>
+            {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+          </CardContent>
+        </Card>
 
-        {error && (
-          <div className="alert-high mt-4">
-            <AlertTriangle className="h-4 w-4 inline mr-2" />
-            {error}
-          </div>
+        {result && (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <Card sx={{ background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.secondary.main, 0.1)} 100%)` }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar sx={{ width: 64, height: 64, bgcolor: theme.palette.primary.main }}>
+                        <Tag sx={{ fontSize: 32 }} />
+                      </Avatar>
+                      <Box>
+                        <Typography variant="h4" fontWeight={700}>#{result.hashtag}</Typography>
+                        <Typography color="text.secondary">{result.analysis?.tweet_count} tweets analyzed</Typography>
+                      </Box>
+                    </Box>
+                    <Box sx={{ textAlign: 'right' }}>
+                      <Typography variant="h3" fontWeight={800} sx={{ color: getRiskColor(result.analysis?.risk_score) }}>
+                        {result.analysis?.risk_score?.toFixed(0)}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">Risk Score</Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={6} sm={4} md={2.4}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Tag sx={{ fontSize: 32, color: theme.palette.primary.main, mb: 1 }} />
+                <Typography variant="h5" fontWeight={700}>{result.analysis?.tweet_count}</Typography>
+                <Typography variant="caption" color="text.secondary">Tweets</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2.4}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Group sx={{ fontSize: 32, color: theme.palette.secondary.main, mb: 1 }} />
+                <Typography variant="h5" fontWeight={700}>{result.analysis?.unique_users}</Typography>
+                <Typography variant="caption" color="text.secondary">Users</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2.4}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <TrendingUp sx={{ fontSize: 32, color: theme.palette.success.main, mb: 1 }} />
+                <Typography variant="h5" fontWeight={700}>{result.analysis?.total_engagement?.toLocaleString()}</Typography>
+                <Typography variant="caption" color="text.secondary">Engagement</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2.4}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <Whatshot sx={{ fontSize: 32, color: theme.palette.warning.main, mb: 1 }} />
+                <Typography variant="h5" fontWeight={700}>{(result.analysis?.coordination_score * 100).toFixed(0)}%</Typography>
+                <Typography variant="caption" color="text.secondary">Coordination</Typography>
+              </Card>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2.4}>
+              <Card sx={{ textAlign: 'center', p: 2 }}>
+                <SmartToy sx={{ fontSize: 32, color: theme.palette.error.main, mb: 1 }} />
+                <Typography variant="h5" fontWeight={700}>{(result.analysis?.bot_percentage * 100).toFixed(0)}%</Typography>
+                <Typography variant="caption" color="text.secondary">Suspicious</Typography>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Stance Distribution</Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={4}>
+                      <Box sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.success.main, 0.1), borderRadius: 2 }}>
+                        <Typography variant="h4" fontWeight={700} color="success.main">
+                          {result.analysis?.stance_breakdown?.pro_india || 0}
+                        </Typography>
+                        <Typography variant="caption">Pro-India</Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Box sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.warning.main, 0.1), borderRadius: 2 }}>
+                        <Typography variant="h4" fontWeight={700} color="warning.main">
+                          {result.analysis?.stance_breakdown?.neutral || 0}
+                        </Typography>
+                        <Typography variant="caption">Neutral</Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Box sx={{ textAlign: 'center', p: 2, bgcolor: alpha(theme.palette.error.main, 0.1), borderRadius: 2 }}>
+                        <Typography variant="h4" fontWeight={700} color="error.main">
+                          {result.analysis?.stance_breakdown?.anti_india || 0}
+                        </Typography>
+                        <Typography variant="caption">Anti-India</Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Top Contributors</Typography>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableHead>
+                        <TableRow>
+                          <TableCell>User</TableCell>
+                          <TableCell align="right">Tweets</TableCell>
+                          <TableCell align="right">Followers</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {result.top_users?.slice(0, 5).map((user, i) => (
+                          <TableRow key={i}>
+                            <TableCell>@{user.username}</TableCell>
+                            <TableCell align="right">{user.tweets}</TableCell>
+                            <TableCell align="right">{(user.followers / 1000).toFixed(1)}K</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>Sample Tweets</Typography>
+                  <Grid container spacing={2}>
+                    {result.sample_tweets?.slice(0, 6).map((tweet, i) => (
+                      <Grid item xs={12} sm={6} key={tweet.tweet_id || i}>
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: alpha(theme.palette.primary.main, 0.03),
+                            border: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                          }}
+                        >
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                            <Typography variant="caption" color="text.secondary">@{tweet.username}</Typography>
+                            <Chip
+                              label={tweet.classification}
+                              size="small"
+                              color={tweet.classification === 'Pro-India' ? 'success' 
+                                : tweet.classification === 'Anti-India' ? 'error' : 'warning'}
+                            />
+                          </Box>
+                          <Typography variant="body2">{tweet.content}</Typography>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         )}
-      </div>
-
-      {result && (
-        <>
-          <div className="dashboard-card scale-in">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-blue-500/20 rounded-xl">
-                  <Hash className="h-8 w-8 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-white">#{result.hashtag}</h3>
-                  <p className="text-white/60">{result.analysis.tweet_count} tweets analyzed</p>
-                </div>
-              </div>
-              <div className={`px-4 py-2 rounded-xl ${getRiskLabel(result.analysis.risk_score).bg}`}>
-                <div className={`text-2xl font-bold ${getRiskLabel(result.analysis.risk_score).color}`}>
-                  {result.analysis.risk_score.toFixed(0)}
-                </div>
-                <div className="text-xs text-white/60">Risk Score</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <div className="metric-card-blue scale-in">
-              <BarChart3 className="h-6 w-6 text-white mb-2" />
-              <div className="text-2xl font-bold text-white">{result.analysis.tweet_count}</div>
-              <div className="text-sm text-white/70">Tweets</div>
-            </div>
-            <div className="metric-card-purple scale-in" style={{animationDelay: '0.05s'}}>
-              <Users className="h-6 w-6 text-white mb-2" />
-              <div className="text-2xl font-bold text-white">{result.analysis.unique_users}</div>
-              <div className="text-sm text-white/70">Users</div>
-            </div>
-            <div className="metric-card-green scale-in" style={{animationDelay: '0.1s'}}>
-              <TrendingUp className="h-6 w-6 text-white mb-2" />
-              <div className="text-2xl font-bold text-white">{result.analysis.total_engagement?.toLocaleString()}</div>
-              <div className="text-sm text-white/70">Engagement</div>
-            </div>
-            <div className="metric-card-orange scale-in" style={{animationDelay: '0.15s'}}>
-              <Zap className="h-6 w-6 text-white mb-2" />
-              <div className="text-2xl font-bold text-white">{(result.analysis.coordination_score * 100).toFixed(0)}%</div>
-              <div className="text-sm text-white/70">Coordination</div>
-            </div>
-            <div className="metric-card-red scale-in" style={{animationDelay: '0.2s'}}>
-              <Bot className="h-6 w-6 text-white mb-2" />
-              <div className="text-2xl font-bold text-white">{(result.analysis.bot_percentage * 100).toFixed(0)}%</div>
-              <div className="text-sm text-white/70">Suspicious</div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="dashboard-card scale-in" style={{animationDelay: '0.2s'}}>
-              <h4 className="font-semibold text-white mb-4">Stance Distribution</h4>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="text-center p-4 bg-green-900/20 rounded-xl">
-                  <div className="text-3xl font-bold text-green-400">{result.analysis.stance_breakdown?.pro_india || 0}</div>
-                  <div className="text-sm text-white/60">Pro-India</div>
-                </div>
-                <div className="text-center p-4 bg-yellow-900/20 rounded-xl">
-                  <div className="text-3xl font-bold text-yellow-400">{result.analysis.stance_breakdown?.neutral || 0}</div>
-                  <div className="text-sm text-white/60">Neutral</div>
-                </div>
-                <div className="text-center p-4 bg-red-900/20 rounded-xl">
-                  <div className="text-3xl font-bold text-red-400">{result.analysis.stance_breakdown?.anti_india || 0}</div>
-                  <div className="text-sm text-white/60">Anti-India</div>
-                </div>
-              </div>
-              <div className="p-3 bg-white/5 rounded-lg">
-                <span className="text-white/70">Dominant: </span>
-                <span className={`font-semibold ${
-                  result.analysis.dominant_stance === 'Pro-India' ? 'text-green-400' :
-                  result.analysis.dominant_stance === 'Anti-India' ? 'text-red-400' : 'text-yellow-400'
-                }`}>{result.analysis.dominant_stance}</span>
-              </div>
-            </div>
-
-            <div className="dashboard-card scale-in" style={{animationDelay: '0.25s'}}>
-              <h4 className="font-semibold text-white mb-4">Top Contributors</h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {result.top_users?.map((user, i) => (
-                  <div key={i} className="flex items-center justify-between p-2 bg-white/5 rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-white/40 text-sm w-6">{i + 1}.</span>
-                      <span className="text-white">@{user.username}</span>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm">
-                      <span className="text-white/60">{user.tweets} tweets</span>
-                      <span className="text-white/40">{(user.followers / 1000).toFixed(1)}K</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="dashboard-card scale-in" style={{animationDelay: '0.3s'}}>
-            <h4 className="font-semibold text-white mb-4">Sample Tweets</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-96 overflow-y-auto">
-              {result.sample_tweets?.map((tweet, i) => (
-                <div key={tweet.tweet_id || i} className="p-3 bg-white/5 rounded-lg border border-white/10">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-white/60 text-sm">@{tweet.username}</span>
-                    <span className={`px-2 py-0.5 rounded text-xs ${
-                      tweet.classification === 'Pro-India' ? 'bg-green-900/30 text-green-400' :
-                      tweet.classification === 'Anti-India' ? 'bg-red-900/30 text-red-400' :
-                      'bg-yellow-900/30 text-yellow-400'
-                    }`}>{tweet.classification}</span>
-                  </div>
-                  <p className="text-white/80 text-sm">{tweet.content}</p>
-                  <div className="flex items-center space-x-4 mt-2 text-xs text-white/50">
-                    <span>❤️ {tweet.likes}</span>
-                    <span>🔄 {tweet.retweets}</span>
-                    <span className={`px-1 py-0.5 rounded ${
-                      tweet.risk_score >= 70 ? 'bg-red-900/30 text-red-400' :
-                      tweet.risk_score >= 40 ? 'bg-yellow-900/30 text-yellow-400' :
-                      'bg-green-900/30 text-green-400'
-                    }`}>Risk: {tweet.risk_score.toFixed(0)}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
+      </Box>
+    </Fade>
   );
 };
 

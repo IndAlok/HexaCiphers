@@ -1,91 +1,74 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Box } from '@mui/material';
+import { ThemeProvider, useThemeMode } from './ThemeContext';
+import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
-import Analytics from './pages/Analytics';
-import Campaigns from './pages/Campaigns';
-import Settings from './pages/Settings';
-import URLAnalysis from './pages/URLAnalysis';
 import UserAnalysis from './pages/UserAnalysis';
 import ThreadAnalysis from './pages/ThreadAnalysis';
 import CampaignAnalysis from './pages/CampaignAnalysis';
-import Navbar from './components/Navbar';
-import Sidebar from './components/Sidebar';
+import URLAnalysis from './pages/URLAnalysis';
+import Analytics from './pages/Analytics';
+import Settings from './pages/Settings';
 
-function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+const DRAWER_WIDTH = 280;
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme === 'light') {
-      setDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    } else {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
+const AppContent = () => {
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { mode } = useThemeMode();
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    if (!darkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
   };
 
   return (
-    <Router>
-      <div className={`min-h-screen transition-all duration-500 ${darkMode ? 'dark' : ''}`} 
-           style={{
-             background: darkMode 
-               ? 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e293b 100%)'
-               : 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%)'
-           }}>
-        
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl floating"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl floating" style={{animationDelay: '1s'}}></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl floating" style={{animationDelay: '2s'}}></div>
-        </div>
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      <Navbar 
+        drawerWidth={DRAWER_WIDTH} 
+        onDrawerToggle={handleDrawerToggle} 
+      />
+      <Sidebar 
+        drawerWidth={DRAWER_WIDTH}
+        mobileOpen={mobileOpen}
+        onDrawerToggle={handleDrawerToggle}
+      />
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          width: { md: `calc(100% - ${DRAWER_WIDTH}px)` },
+          ml: { md: `${DRAWER_WIDTH}px` },
+          mt: '64px',
+          minHeight: 'calc(100vh - 64px)',
+          background: mode === 'dark' 
+            ? 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)'
+            : 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 50%, #f8fafc 100%)',
+          p: { xs: 2, sm: 3 },
+        }}
+      >
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/user-analysis" element={<UserAnalysis />} />
+          <Route path="/thread-analysis" element={<ThreadAnalysis />} />
+          <Route path="/campaign-analysis" element={<CampaignAnalysis />} />
+          <Route path="/url-analysis" element={<URLAnalysis />} />
+          <Route path="/analytics" element={<Analytics />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </Box>
+    </Box>
+  );
+};
 
-        <Navbar 
-          sidebarOpen={sidebarOpen} 
-          setSidebarOpen={setSidebarOpen}
-          darkMode={darkMode}
-          toggleDarkMode={toggleDarkMode}
-        />
-        
-        <div className="flex relative z-10">
-          <Sidebar 
-            sidebarOpen={sidebarOpen} 
-            setSidebarOpen={setSidebarOpen}
-            darkMode={darkMode}
-          />
-          
-          <main className="flex-1 lg:ml-64">
-            <div className="py-6">
-              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <Routes>
-                  <Route path="/" element={<Dashboard darkMode={darkMode} />} />
-                  <Route path="/dashboard" element={<Dashboard darkMode={darkMode} />} />
-                  <Route path="/user-analysis" element={<UserAnalysis darkMode={darkMode} />} />
-                  <Route path="/thread-analysis" element={<ThreadAnalysis darkMode={darkMode} />} />
-                  <Route path="/campaign-analysis" element={<CampaignAnalysis darkMode={darkMode} />} />
-                  <Route path="/url-analysis" element={<URLAnalysis darkMode={darkMode} />} />
-                  <Route path="/analytics" element={<Analytics darkMode={darkMode} />} />
-                  <Route path="/campaigns" element={<Campaigns darkMode={darkMode} />} />
-                  <Route path="/settings" element={<Settings darkMode={darkMode} />} />
-                </Routes>
-              </div>
-            </div>
-          </main>
-        </div>
-      </div>
-    </Router>
+function App() {
+  return (
+    <ThemeProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </ThemeProvider>
   );
 }
 
