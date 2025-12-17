@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Hash, Search, AlertTriangle, Users, 
-  TrendingUp, BarChart3, Bot, Shield, Zap
+  TrendingUp, BarChart3, Bot, Zap
 } from 'lucide-react';
 
 const CampaignAnalysis = ({ darkMode }) => {
