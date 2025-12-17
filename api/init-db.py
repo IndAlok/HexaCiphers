@@ -6,6 +6,9 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.do_POST()
+
     def do_POST(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         
