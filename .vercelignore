@@ -10,12 +10,12 @@ frontend/.next
 .git
 .github
 
-# Environment files (use Vercel dashboard for env vars)
+# Environment files
 .env
 .env.local
 .env.*.local
 
-# Python cache
+# Python cache and compiled files
 __pycache__
 *.pyc
 *.pyo
@@ -23,6 +23,11 @@ __pycache__
 .Python
 *.py[cod]
 *$py.class
+*.so
+*.egg
+*.egg-info
+dist
+build
 
 # IDE
 .vscode
@@ -35,8 +40,10 @@ __pycache__
 frontend/coverage
 *.test.js
 *.spec.js
+test_*.py
+*_test.py
 
-# Documentation
+# Documentation - only keep README.md
 *.md
 !README.md
 
@@ -53,3 +60,10 @@ Thumbs.db
 # Misc
 *.orig
 .cache
+
+# Artifacts directory
+.gemini
+
+# Lock files (will be regenerated)
+frontend/package-lock.json
+package-lock.json
