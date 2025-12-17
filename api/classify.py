@@ -7,8 +7,6 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class handler(BaseHTTPRequestHandler):
     def do_POST(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
-        
         try:
             content_length = int(self.headers.get('Content-Length', 0))
             body = self.rfile.read(content_length)
@@ -17,6 +15,7 @@ class handler(BaseHTTPRequestHandler):
             
             if not text:
                 self.send_response(400)
+                self.send_header('Access-Control-Allow-Origin', '*')
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
                 self.wfile.write(json.dumps({
@@ -30,6 +29,7 @@ class handler(BaseHTTPRequestHandler):
             result = classify(text)
             
             self.send_response(200)
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             
@@ -45,6 +45,7 @@ class handler(BaseHTTPRequestHandler):
             
         except Exception as e:
             self.send_response(500)
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({

@@ -10,7 +10,7 @@ class handler(BaseHTTPRequestHandler):
         self.do_POST()
 
     def do_POST(self):
-        self.send_header('Access-Control-Allow-Origin', '*')
+        # Header removed here, will be added after send_response
         
         debug_info = []
         try:
@@ -38,6 +38,7 @@ class handler(BaseHTTPRequestHandler):
             debug_info.append(f"init_tables finished with result: {result}")
             
             self.send_response(200)
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             
@@ -53,6 +54,7 @@ class handler(BaseHTTPRequestHandler):
             print(f"ERROR in init-db: {str(e)}\n{trace_str}") # Log to Vercel console
             
             self.send_response(500)
+            self.send_header('Access-Control-Allow-Origin', '*')
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({
