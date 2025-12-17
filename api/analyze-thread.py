@@ -138,7 +138,69 @@ class handler(BaseHTTPRequestHandler):
             self._send_json(200, {'status': 'success', 'data': result})
             
         except ValueError as e:
-            self._send_error(503, str(e))
+            error_msg = str(e)
+            if '429' in error_msg:
+                #Rate Limit Hit :sad: - fallback to demo
+                from api._lib.simulator import get_mock_tweet, get_mock_conversation
+                tweet_id = extract_tweet_id(url) or 'simulated_root'
+                root_tweet = get_mock_tweet(tweet_id)
+                replies = get_mock_conversation(conversation_id=tweet_id, count=10)
+                all_tweets = [root_tweet] + replies               
+                #Perform actual analysis on mock data
+                thread_analysis = analyze_thread(all_tweets)
+                root_classification = classify_text(root_tweet.get('content', ''))
+                
+                analyzed_replies = []
+                for reply in replies:
+                    result = classify_text(reply.get('content', ''))
+                    analyzed_replies.append({
+                        'tweet_id': reply.get('tweet_id'),
+                        'username': reply.get('username'),
+                        'content': reply.get('content', '')[:200],
+                        'sentiment': result['sentiment'],
+                        'classification': result['classification'],
+                        'likes': reply.get('likes', 0),
+                        'in_reply_to': reply.get('in_reply_to'),
+                        'created_at': reply.get('created_at')
+                    })
+                
+                result = {
+                    'root_tweet': {
+                        'tweet_id': root_tweet.get('tweet_id'),
+                        'content': root_tweet.get('content'),
+                        'username': root_tweet.get('username'),
+                        'display_name': root_tweet.get('display_name'),
+                        'user_followers': root_tweet.get('user_followers'),
+                        'likes': root_tweet.get('likes'),
+                        'retweets': root_tweet.get('retweets'),
+                        'replies': root_tweet.get('replies'),
+                        'quotes': root_tweet.get('quotes'),
+                        'sentiment': root_classification['sentiment'],
+                        'classification': root_classification['classification'],
+                        'risk_score': root_classification['risk_score'],
+                        'created_at': root_tweet.get('created_at')
+                    },
+                    'thread_analysis': {
+                        'tweet_count': thread_analysis['tweet_count'],
+                        'reply_count': thread_analysis['reply_count'],
+                        'unique_users': thread_analysis['unique_users'],
+                        'total_engagement': thread_analysis['total_engagement'],
+                        'dominant_sentiment': thread_analysis['dominant_sentiment'],
+                        'dominant_stance': thread_analysis['dominant_stance'],
+                        'controversy_score': round(thread_analysis['controversy_score'], 3),
+                        'avg_sentiment_score': round(thread_analysis['avg_sentiment_score'], 3),
+                        'pro_india_count': thread_analysis['pro_india_count'],
+                        'anti_india_count': thread_analysis['anti_india_count'],
+                        'neutral_count': thread_analysis['neutral_count'],
+                        'sentiment_breakdown': thread_analysis['sentiment_breakdown']
+                    },
+                    'replies': analyzed_replies,
+                    'conversation_id': root_tweet['conversation_id'],
+                    'simulation_mode': True
+                }
+                self._send_json(200, {'status': 'success', 'data': result, 'source': 'simulation'})
+            else:
+                self._send_error(503, error_msg)
         except Exception as e:
             self._send_error(500, str(e))
     

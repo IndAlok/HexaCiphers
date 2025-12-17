@@ -113,7 +113,64 @@ class handler(BaseHTTPRequestHandler):
             self._send_json(200, {'status': 'success', 'data': result})
             
         except ValueError as e:
-            self._send_error(503, str(e))
+            error_msg = str(e)
+            if '429' in error_msg:
+                #Rate Limit Hit :sad: - fallback to demo
+                from api._lib.simulator import get_mock_tweet
+                #Create a specific mock tweet for this URL
+                mock_tweet = get_mock_tweet(tweet_id)
+                #Run actual classification on the mock content so the AI part still works! :)
+                #demonstrates the AI engine even if X api couldn't be utilized
+                classification = classify_text(mock_tweet['content'])
+                bot_prob = calculate_bot_probability({
+                    'bio': mock_tweet['user_bio'],
+                    'username': mock_tweet['username'],
+                    'followers': mock_tweet['user_followers'],
+                    'following': mock_tweet['user_following'],
+                    'tweet_count': mock_tweet['user_tweet_count'],
+                    'account_age_days': 365
+                })
+                
+                result = {
+                    'tweet': {
+                        'tweet_id': mock_tweet['tweet_id'],
+                        'content': mock_tweet['content'],
+                        'tweet_type': mock_tweet['tweet_type'],
+                        'created_at': mock_tweet['created_at']
+                    },
+                    'user': {
+                        'username': mock_tweet['username'],
+                        'display_name': mock_tweet['display_name'],
+                        'followers': mock_tweet['user_followers'],
+                        'following': mock_tweet['user_following'],
+                        'verified': mock_tweet['user_verified'],
+                        'profile_image': mock_tweet['user_profile_image']
+                    },
+                    'engagement': {
+                        'likes': mock_tweet['likes'],
+                        'retweets': mock_tweet['retweets'],
+                        'replies': mock_tweet['replies'],
+                        'quotes': mock_tweet['quotes']
+                    },
+                    'analysis': {
+                        'sentiment': classification['sentiment'],
+                        'sentiment_confidence': round(classification['sentiment_confidence'], 3),
+                        'classification': classification['classification'],
+                        'classification_confidence': round(classification['classification_confidence'], 3),
+                        'risk_score': round(classification['risk_score'], 1),
+                        'bot_probability': round(bot_prob, 3)
+                    },
+                    'metadata': {
+                        'hashtags': mock_tweet['hashtags'],
+                        'mentions': mock_tweet['mentions'],
+                        'conversation_id': mock_tweet['conversation_id'],
+                        'url': url
+                    },
+                    'simulation_mode': True  # Flag to frontend
+                }
+                self._send_json(200, {'status': 'success', 'data': result, 'source': 'simulation'})
+            else:
+                self._send_error(503, error_msg)
         except Exception as e:
             self._send_error(500, str(e))
     

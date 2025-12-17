@@ -127,7 +127,58 @@ class handler(BaseHTTPRequestHandler):
             self._send_json(200, {'status': 'success', 'data': result})
             
         except ValueError as e:
-            self._send_error(503, str(e))
+            error_msg = str(e)
+            if '429' in error_msg:
+                #Rate Limit Hit :sad: - fallback to demo
+                from api._lib.simulator import get_mock_user, get_mock_user_tweets
+                user = get_mock_user(username)
+                tweets = get_mock_user_tweets(user['twitter_id'], count=10)               
+                #Perform actual analysis on mock data
+                analysis = analyze_user_profile(user, tweets)
+                
+                tweet_analyses = []
+                for tweet in tweets:
+                    result = classify_text(tweet.get('content', ''))
+                    tweet_analyses.append({
+                        'tweet_id': tweet.get('tweet_id'),
+                        'content': tweet.get('content', '')[:200],
+                        'sentiment': result['sentiment'],
+                        'classification': result['classification'],
+                        'likes': tweet.get('likes', 0),
+                        'retweets': tweet.get('retweets', 0),
+                        'created_at': tweet.get('created_at')
+                    })
+                
+                result = {
+                    'user': {
+                        'twitter_id': user['twitter_id'],
+                        'username': user['username'],
+                        'display_name': user['display_name'],
+                        'bio': user['bio'],
+                        'followers': user['followers'],
+                        'following': user['following'],
+                        'tweet_count': user['tweet_count'],
+                        'verified': user['verified'],
+                        'profile_image_url': user['profile_image_url'],
+                        'account_age_days': user['account_age_days']
+                    },
+                    'analysis': {
+                        'grade': analysis['grade'],
+                        'stance_label': analysis['stance_label'],
+                        'stance_score': round(analysis['stance_score'], 3),
+                        'bot_probability': round(analysis['bot_probability'], 3),
+                        'influence_score': round(analysis['influence_score'], 1),
+                        'risk_score': round(analysis['risk_score'], 1),
+                        'tweets_analyzed': analysis['tweets_analyzed'],
+                        'sentiment_breakdown': analysis['sentiment_breakdown'],
+                        'stance_breakdown': analysis['stance_breakdown']
+                    },
+                    'recent_tweets': tweet_analyses,
+                    'simulation_mode': True
+                }
+                self._send_json(200, {'status': 'success', 'data': result, 'source': 'simulation'})
+            else:
+                self._send_error(503, error_msg)
         except Exception as e:
             self._send_error(500, str(e))
     

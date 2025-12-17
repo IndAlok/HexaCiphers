@@ -155,7 +155,88 @@ class handler(BaseHTTPRequestHandler):
             self._send_json(200, {'status': 'success', 'data': result})
             
         except ValueError as e:
-            self._send_error(503, str(e))
+            error_msg = str(e)
+            if '429' in error_msg:
+                #Rate Limit Hit :sad: - fallback to demo
+                from api._lib.simulator import get_mock_user_tweets
+                
+                #mock data for campaign
+                #just re-using user tweets generator but customizing context
+                tweets = get_mock_user_tweets(count=10)
+                for t in tweets:
+                    t['content'] = f"Simulated campaign post #{hashtag} " + t['content']
+                    t['hashtags'] = [hashtag, 'Simulation']
+                
+                #analysis logic on mock data
+                users = set()
+                user_data = {}
+                sentiments = []
+                stances = []
+                total_engagement = 0
+                suspicious_count = 0
+                analyzed_tweets = []
+
+                for tweet in tweets:
+                    user_id = tweet.get('user_id')
+                    users.add(user_id)
+                    if user_id not in user_data:
+                        user_data[user_id] = {
+                            'username': 'simulation_user',
+                            'followers': 1000,
+                            'tweet_count': 1
+                        }
+                    else:
+                        user_data[user_id]['tweet_count'] += 1
+                    
+                    result = classify_text(tweet.get('content', ''))
+                    sentiments.append(result['sentiment'])
+                    stances.append(result['classification'])
+                    
+                    engagement = tweet.get('likes', 0) + tweet.get('retweets', 0)
+                    total_engagement += engagement
+                    
+                    analyzed_tweets.append({
+                        'tweet_id': tweet.get('tweet_id'),
+                        'username': 'simulation_user',
+                        'content': tweet.get('content', '')[:200],
+                        'sentiment': result['sentiment'],
+                        'classification': result['classification'],
+                        'risk_score': result['risk_score'],
+                        'likes': tweet.get('likes', 0),
+                        'retweets': tweet.get('retweets', 0),
+                        'created_at': tweet.get('created_at')
+                    })
+
+                pos = sentiments.count('positive')
+                neg = sentiments.count('negative')
+                dominant_sentiment = 'positive' if pos > neg else 'negative'
+                
+                pro = stances.count('Pro-India')
+                anti = stances.count('Anti-India')
+                dominant_stance = 'Pro-India' if pro > anti else 'Neutral'
+                
+                result = {
+                    'hashtag': hashtag,
+                    'analysis': {
+                        'tweet_count': len(tweets),
+                        'unique_users': len(users),
+                        'total_engagement': total_engagement,
+                        'avg_engagement': round(total_engagement / len(tweets), 1),
+                        'dominant_sentiment': dominant_sentiment,
+                        'dominant_stance': dominant_stance,
+                        'coordination_score': 0.5,
+                        'bot_percentage': 0.1,
+                        'risk_score': 25.5,
+                        'sentiment_breakdown': {'positive': pos, 'negative': neg, 'neutral': sentiments.count('neutral')},
+                        'stance_breakdown': {'pro_india': pro, 'anti_india': anti, 'neutral': stances.count('Neutral')}
+                    },
+                    'top_users': [{'username': 'simulation_user', 'tweets': 10, 'followers': 1000}],
+                    'sample_tweets': analyzed_tweets,
+                    'simulation_mode': True
+                }
+                self._send_json(200, {'status': 'success', 'data': result, 'source': 'simulation'})
+            else:
+                self._send_error(503, error_msg)
         except Exception as e:
             self._send_error(500, str(e))
     
