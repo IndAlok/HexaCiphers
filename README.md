@@ -436,7 +436,7 @@ Contributions are welcome. Please:
 
 ## Acknowledgments
 
-This project was developed with ❤️ by IndAlok[https://github.com/IndAlok]. Special thanks to:
+This project was developed with ❤️ by [IndAlok](https://github.com/IndAlok). Special thanks to:
 - Google Generative AI team for Gemini API access
 - Vercel for serverless infrastructure platform
 - Neon for PostgreSQL database services
