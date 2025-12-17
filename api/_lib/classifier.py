@@ -1,4 +1,7 @@
 # Weighted sentiment dictionaries
+from api._lib.ai import get_ai_analysis
+
+# Weighted sentiment dictionaries
 POSITIVE_SCORES = {
     'good': 1, 'great': 2, 'excellent': 3, 'amazing': 3, 'wonderful': 2, 'love': 3, 'like': 1, 
     'happy': 2, 'proud': 2, 'best': 3, 'fantastic': 3, 'beautiful': 2, 'awesome': 3, 
@@ -6,7 +9,11 @@ POSITIVE_SCORES = {
     'progress': 2, 'growth': 2, 'win': 2, 'victory': 2, 'celebrate': 2, 'congratulations': 2, 
     'inspiring': 2, 'inspire': 2, 'hope': 1, 'support': 2, 'thank': 1, 'thanks': 1, 
     'grateful': 2, 'blessed': 2, 'incredible': 3, 'masterpiece': 3, 'visionary': 3,
-    'strong': 1, 'powerful': 1, 'effective': 1, 'promising': 2, 'optimistic': 2
+    'strong': 1, 'powerful': 1, 'effective': 1, 'promising': 2, 'optimistic': 2,
+    # Hindi/Hinglish Positive
+    'zindabad': 3, 'jai': 2, 'mahaan': 3, 'badhai': 2, 'shandaar': 3, 'zabardast': 3,
+    'sundar': 2, 'accha': 1, 'acche': 1, 'safalta': 2, 'vikas': 2, 'vijay': 2,
+    'swagat': 1, 'dhanyavad': 1, 'namaste': 1, 'pranam': 1
 }
 
 NEGATIVE_SCORES = {
@@ -16,7 +23,11 @@ NEGATIVE_SCORES = {
     'corrupt': 3, 'corruption': 3, 'scam': 3, 'fraud': 3, 'lies': 2, 'lying': 2, 
     'fake': 2, 'propaganda': 2, 'manipulate': 2, 'deceive': 2, 'shame': 2, 'destroy': 3, 
     'attack': 2, 'violence': 3, 'threat': 2, 'danger': 2, 'fear': 1, 'outrage': 2,
-    'useless': 2, 'incompetent': 3, 'weak': 1, 'hopeless': 2, 'trash': 3, 'nonsense': 2
+    'useless': 2, 'incompetent': 3, 'weak': 1, 'hopeless': 2, 'trash': 3, 'nonsense': 2,
+    # Hindi/Hinglish Negative
+    'murdabad': 4, 'haaye': 3, 'bekaar': 2, 'ghatiya': 3, 'sharm': 3, 'barbaad': 3,
+    'dhoka': 2, 'jhooth': 2, 'fareb': 2, 'nafrat': 3, 'dushman': 2, 'aatank': 4,
+    'gaddar': 3, 'kutta': 3, 'suar': 3, 'saala': 1, 'chor': 2
 }
 
 # Weighted Stance Indicators
@@ -28,7 +39,11 @@ PRO_INDIA_SCORES = {
     'india growth': 2, 'india progress': 2, 'india development': 2, 'india innovation': 2, 
     'india rising': 2, 'india shining': 2, 'proud to be indian': 4, 'love my country': 3, 
     'my india': 1, 'our india': 1, 'vishwaguru': 2, 'atmanirbhar': 2, 'developed india': 2,
-    'modi': 0.5, 'yogi': 0.5, 'bjp': 0.5, 'rss': 0.5  # Context dependent
+    'modi': 0.5, 'yogi': 0.5, 'bjp': 0.5, 'rss': 0.5,  # Context dependent
+    # Hindi/Hinglish Pro
+    'bharat mata ki jai': 5, 'hindustan zindabad': 5, 'mera bharat mahan': 4,
+    'akhand bharat': 3, 'modi hai to mumkin hai': 2, 'ghar ghar modi': 2,
+    'jai shri ram': 1, 'har har mahadev': 1, 'sanatan dharma': 2
 }
 
 ANTI_INDIA_SCORES = {
@@ -41,7 +56,11 @@ ANTI_INDIA_SCORES = {
     'intolerant india': 3, 'unsafe india': 3, 'rape capital': 4, 'lynchistan': 5,
     'minorities unsafe': 2, 'islamophobia': 2, 'hindutva terror': 5, 'saffron terror': 5,
     'fascist modi': 4, 'dictator': 2, 'democracy died': 3, 'pogrom': 4,
-    'occupied kashmir': 5, 'free kashmir': 5, 'khalistan': 5, 'terrorist state': 5
+    'occupied kashmir': 5, 'free kashmir': 5, 'khalistan': 5, 'terrorist state': 5,
+    # Hindi/Hinglish Anti
+    'hindustan murdabad': 5, 'bharat tere tukde': 5, 'azadi': 2, 'laal salaam': 1,
+    'modi hatao': 2, 'bjp hatao': 1, 'desh drohi': 3, 'sanghi': 1, 'bhakt': 1,
+    'godimedia': 2, 'godi media': 2
 }
 
 BOT_INDICATORS = {
@@ -79,8 +98,7 @@ def classify_sentiment(text):
             
     # Negation handling (simple)
     if ' not ' in text_processed or ' no ' in text_processed or " don't " in text_processed:
-        # Flip dominant sentiment score slightly to reduce confidence or invert
-        pass # Too complex for simple script, relying on strong phrase matches
+        pass 
     
     total_score = pos_score + neg_score
     
@@ -116,7 +134,7 @@ def classify_stance(text):
         if phrase in text_processed:
             anti_score += weight
             
-    # Contextual Boosts (simple n-gram lookups for context)
+    # Contextual Boosts
     if 'support' in text_processed and 'india' in text_processed: pro_score += 1
     if 'against' in text_processed and 'india' in text_processed: anti_score += 1
     
@@ -161,6 +179,8 @@ def calculate_risk_score(sentiment, stance, engagement=None, bot_prob=0):
 
 def calculate_bot_probability(user_data):
     score = 0
+    if not user_data:
+        return 0
     
     if not user_data.get('bio'):
         score += BOT_INDICATORS['no_bio']
@@ -196,6 +216,8 @@ def calculate_bot_probability(user_data):
     return min(1.0, max(0, score))
 
 def calculate_influence_score(user_data):
+    if not user_data:
+        return 0
     followers = user_data.get('followers', 0)
     following = max(user_data.get('following', 1), 1)
     tweet_count = user_data.get('tweet_count', 0)
@@ -262,6 +284,15 @@ def calculate_controversy_score(sentiments, stances):
     return min(1.0, max(0, controversy))
 
 def classify_text(text, engagement=None):
+    # Try AI Mode First
+    try:
+        ai_result = get_ai_analysis(text)
+        if ai_result:
+            return ai_result
+    except Exception as e:
+        print(f"AI classification failed, falling back: {e}")
+
+    # Fallback to local weighted logic
     sentiment = classify_sentiment(text)
     stance = classify_stance(text)
     risk = calculate_risk_score(sentiment, stance, engagement)
@@ -273,7 +304,8 @@ def classify_text(text, engagement=None):
         'classification': stance['label'],
         'classification_score': stance['score'],
         'classification_confidence': stance['confidence'],
-        'risk_score': risk
+        'risk_score': risk,
+        'method': 'fallback'
     }
 
 def analyze_user_profile(user_data, tweets):

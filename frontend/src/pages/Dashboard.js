@@ -117,10 +117,10 @@ const Dashboard = () => {
     const query = searchQuery.trim();
     // Simple heuristic: if it contains http or twitter.com or x.com, it's a URL
     if (query.match(/^(http|https:\/\/|www\.|twitter\.com|x\.com)/)) {
-      navigate(`/analysis/url?url=${encodeURIComponent(query)}`);
+      navigate(`/url-analysis?url=${encodeURIComponent(query)}`);
     } else {
       // Otherwise treat as username
-      navigate(`/analysis/user?username=${encodeURIComponent(query.replace('@', ''))}`);
+      navigate(`/user-analysis?username=${encodeURIComponent(query.replace('@', ''))}`);
     }
   };
 
