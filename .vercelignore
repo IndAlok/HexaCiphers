@@ -63,7 +63,3 @@ Thumbs.db
 
 # Artifacts directory
 .gemini
-
-# Lock files (will be regenerated)
-frontend/package-lock.json
-package-lock.json
